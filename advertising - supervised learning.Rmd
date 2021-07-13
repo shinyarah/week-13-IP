@@ -1,0 +1,590 @@
+---
+title: "Supervised"
+author: "shinyarah"
+date: "7/09/2021"
+output: html_document
+---
+
+## DEFINING THE QUESTION
+an entrepreneur with an online cryptography course wishes to advertise it on her blog. The dataset provided contains data collected from target audiences from around the world who have visited the site previously. I am tasked with identifying which individuals are most likely to click on the cryptography course advert
+
+## METRICS OF SUCCESS
+I will need to find how different features are correlated. This means that they either have a positive or negative correlation coefficient. Success will be achieved once these features are identified
+
+## CONTEXT
+the dataset provided contains information on target audiences from across the globe. it has 1000rows and 10 columns
+
+## EXPERIMENTAL DESIGN
+1. import and read the dataset
+2. check for null values
+3. check for duplicates 
+4. univariate analysis
+   + measures of central tendency and dispersion
+   + plotting histograms, frequency tables
+5. bivariate analysis
+   + covariance
+   + correlation
+   + scatter plots
+6. Implementation
+7. Conclusion
+8. Recommendations
+
+## loading the dataset
+```{r}
+advertising <- read.csv("http://bit.ly/IPAdvertisingData")
+```
+
+## Reading the dataset
+```{r}
+head(advertising)
+```
+```{r}
+tail(advertising)
+```
+
+
+```{r}
+str(advertising)
+```
+
+
+```{r}
+summary(advertising)
+```
+
+## finding null values
+
+```{r}
+is.na(advertising)
+```
+## checking for duplicates and unique values
+```{r}
+duplicate_values <- advertising[duplicated(advertising),]
+```
+
+
+# explaratory data analysis
+
+## univariate analysis
+### measures of central tendency
+#### column age
+##### finding mean for the column age
+```{r}
+age_mean <- mean(advertising$Age)
+age_mean
+```
+##### finding the mode for age
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+age_mode <- getmode(advertising$age)
+age_mode
+```
+```{r}
+is.na(advertising$Age)
+```
+##### finding median for age
+```{r}
+age_median <- median(advertising$Age)
+age_median
+```
+
+#### column time_spent_on_site
+##### mean
+```{r}
+dtsos_mean <- mean(advertising$Daily.Time.Spent.on.Site)
+dtsos_mean
+```
+##### mode
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+dtsos_mode <- getmode(advertising$Daily.Time.Spent.on.Site)
+dtsos_mode
+```
+##### median
+```{r}
+dtsos_median <- median(advertising$Daily.Time.Spent.on.Site)
+dtsos_median
+```
+#### column area_income
+##### mean
+```{r}
+ai_mean <- mean(advertising$Area.Income)
+ai_mean
+```
+##### mode
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+ai_mode <- getmode(advertising$Area.Income)
+ai_mode
+```
+##### median
+```{r}
+ai_median <- median(advertising$Area.Income)
+ai_median
+```
+#### column daily internet usage
+##### mean
+```{r}
+diu_mean <- mean(advertising$Daily.Internet.Usage)
+diu_mean
+```
+##### mode
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+diu_mode <- getmode(advertising$Daily.Internet.Usage)
+diu_mode
+```
+##### median
+```{r}
+diu_median <- median(advertising$Daily.Internet.Usage)
+diu_median
+```
+#### categorical variables
+```{r}
+ad_topic <- advertising$Ad.Topic.Line
+city <- advertising$City
+gender <- advertising$Male
+country <- advertising$Country
+clicked <- advertising$Clicked.on.Ad
+ai <- advertising$Area.Income
+```
+```{r}
+Gender_dist <- table(gender)
+label <- c("Female","Male")
+barplot(Gender_dist,names.arg = label,main = "Gender Distribution")
+```
+```{r}
+city_dist <- table(city)
+label <- c("City")
+barplot(city_dist,names.arg = label,main = "City Distribution")
+```
+```{r}
+country_dist <- table(country)
+label <- c("Country")
+barplot(country_dist,names.arg = label,main = "country Distribution")
+```
+
+
+```{r}
+# top 10 countries with high average income
+avg.country = aggregate(ai, by = list(country), FUN = mean)
+cou.top10 <- head(avg.country[order(avg.country$x,decreasing = TRUE), ],10)
+barplot(cou.top10$x,main = "COUNTRIES WITH HIGH INCOME",
+        xlab = "Area Income",
+        density = 80,
+        las=1,
+        names=cou.top10$Group.1,
+        horiz = TRUE)
+
+```
+```{r}
+avg.country = aggregate(clicked, by = list(country), FUN = mean)
+cou.top10 <- head(avg.country[order(avg.country$x,decreasing = TRUE), ],10)
+barplot(cou.top10$x,main = "COUNTRIES WITH MOST CLICKS",
+        xlab = "Clicked.on.AD",
+        density = 80,
+        las=1,
+        names=cou.top10$Group.1,
+        horiz = TRUE)
+```
+
+
+### measures of dispersion
+#### column age
+##### variance
+```{r}
+age_variance <- var(advertising$Age)
+age_variance
+```
+##### standard deviation
+```{r}
+age_sd <- sd(advertising$Age)
+age_sd
+```
+##### range
+```{r}
+age_range <- range(advertising$Age)
+age_range
+```
+##### quantile
+```{r}
+age_qt <- quantile(advertising$Age)
+age_qt
+```
+##### skew
+```{r}
+library(moments)
+age_skew <- skewness(advertising$Age)
+age_skew
+```
+##### kurtosis
+```{r}
+#install.packages("e1071")                  
+age_kurt <- kurtosis(advertising$Age)
+age_kurt
+```
+#### column time_spent_on_site
+##### variance
+```{r}
+dstot_var <- var(advertising$Daily.Time.Spent.on.Site)
+dstot_var
+```
+##### standard deviation
+```{r}
+dstot_sd <- sd(advertising$Daily.Time.Spent.on.Site)
+dstot_sd
+```
+##### range
+```{r}
+dstot_range <- range(advertising$Daily.Time.Spent.on.Site)
+dstot_range
+```
+##### quantile
+```{r}
+dstot_qt <- quantile(advertising$Daily.Time.Spent.on.Site)
+dstot_qt
+```
+
+##### skew
+```{r}
+#install.packages("moments")
+library(moments)
+dstot_skew <- skewness(advertising$Daily.Time.Spent.on.Site)
+dstot_skew
+```
+
+##### kurtosis
+```{r}
+#install.packages("e1071")                  
+dstot_kurt <- kurtosis(advertising$Daily.Time.Spent.on.Site)
+dstot_kurt
+```
+
+#### column area income
+##### variance
+```{r}
+ai_var <- var(advertising$Area.Income)
+ai_var
+```
+
+##### standard deviation
+```{r}
+ai_sd <- sd(advertising$Area.Income)
+ai_sd
+```
+
+##### range
+```{r}
+ai_range <- range(advertising$Area.Income)
+ai_range
+```
+
+##### quantile
+```{r}
+ai_qt <- quantile(advertising$Area.Income)
+ai_qt
+```
+
+##### skew
+```{r}
+#install.packages("moments")
+library(moments)
+ai_skew <- skewness(advertising$Area.Income)
+ai_skew
+```
+
+##### kurtosis
+```{r}
+#install.packages("e1071")                  
+ai_kurt <- kurtosis(advertising$Area.Income)
+ai_kurt
+```
+
+
+#### column daily internet usage
+##### variance
+```{r}
+diu_var <- var(advertising$Daily.Internet.Usage)
+diu_var
+```
+
+##### standard deviation
+```{r}
+diu_sd <- sd(advertising$Daily.Internet.Usage)
+diu_sd
+```
+
+##### range
+```{r}
+diu_range <- range(advertising$Daily.Internet.Usage)
+diu_range
+```
+
+##### quantile
+```{r}
+diu_qt <- quantile(advertising$Daily.Internet.Usage)
+diu_qt
+```
+
+##### skew
+```{r}
+#install.packages("moments")
+library(moments)
+diu_skew <- skewness(advertising$Daily.Internet.Usage)
+diu_skew
+```
+
+##### kurtosis
+```{r}
+#install.packages("e1071")                  
+diu_kurt <- kurtosis(advertising$Daily.Internet.Usage)
+diu_kurt
+```
+
+
+
+### plotting
+```{r}
+boxplot(advertising$Age)
+```
+
+```{r}
+boxplot(advertising$Daily.Time.Spent.on.Site)
+```
+
+```{r}
+boxplot(advertising$Area.Income)
+```
+```{r}
+boxplot(advertising$Daily.Internet.Usage)
+```
+there are outliers present in area income. i will be maintaining these outliers as they can be easily be explained by other factors such as demographics and area of expertise
+
+#### frequency distributions
+```{r}
+dstot_fn <- advertising$Daily.Time.Spent.on.Site
+dstot_fn_freq <- table(dstot_fn)
+barplot(dstot_fn_freq)
+```
+daily time spent on site varies across the board
+
+```{r}
+age_fn <- advertising$Age
+age_fn_freq <- table(age_fn)
+barplot(age_fn_freq)
+```
+most people that visited her blog are about 31 years old, while the least are about 61 years old. 
+
+```{r}
+diu_fn <- advertising$Daily.Internet.Usage
+diu_fn_freq <- table(diu_fn)
+barplot(diu_fn_freq)
+```
+the bulk of daily internet usage is about 200
+
+#### histograms
+```{r}
+hist(advertising$Daily.Time.Spent.on.Site)
+```
+most time spent on site is 75-80 hours
+
+```{r}
+hist(advertising$Age)
+```
+30-35 is the most common age group on the site
+
+```{r}
+hist(advertising$Area.Income)
+```
+most people receive an income of 60,000 to 65,000
+
+```{r}
+hist(advertising$Daily.Internet.Usage)
+```
+
+
+## bivariate analysis
+### covariance
+```{r}
+age_cov <- advertising$Age
+ai_cov <- advertising$Area.Income
+cov(age_cov, ai_cov)
+```
+covariance between age and area income represents a negative linear relationship between the two
+
+```{r}
+dstot_cov <- advertising$Daily.Time.Spent.on.Site
+cov(age_cov, dstot_cov)
+```
+the covariance of age and daily time spent on site indicates a negative linear relationship between the two factors
+
+```{r}
+cov(dstot_cov, ai_cov)
+```
+the covariance of daily time spent on site and area income shows a positive linear relationship between the two.
+
+### correlation
+```{r}
+age_corr <- advertising$Age
+dstot_corr <- advertising$Daily.Time.Spent.on.Site
+ai_corr <- advertising$Area.Income
+
+cor(age_corr, dstot_corr)
+```
+the correlation co-efficient between age and daily time spent on site is less than 0, indicating that the two factors have a negative linear relationship
+
+```{r}
+cor(age_corr, ai_corr)
+```
+the correlation coefficient between age and area income is less than 0, indicating that they have a negative linear relationship
+
+```{r}
+cor(ai_corr, dstot_corr)
+```
+the correlation coefficient between area income and daily time spent on site is slightly above 0, showing a weak positive linear relationship
+
+### correlation heatmap
+```{r}
+cor(advertising[sapply(advertising,is.numeric)])
+```
+
+
+### scatter plots
+```{r}
+ai_plot <- advertising$Area.Income
+age_plot <- advertising$Age
+dstot_plot <- advertising$Daily.Time.Spent.on.Site
+diu_plot <- advertising$Daily.Internet.Usage
+
+plot(ai_plot, age_plot, xlab="Area.Income", ylab="Age")
+```
+the under 40s seem to earn more in the 50,000-70,000 range
+
+```{r}
+#scatter plot for daily time spent on site vs income
+plot(ai_plot, dstot_plot, xlab="Area.Income", ylab="Daily.Time.Spent.On.site")
+```
+the scatter plot indicates that those that earn more spend more time on site
+
+```{r}
+#scatter plot for daily time on site vs their age
+plot(dstot_plot, age_plot, xlab="Daily.Time.Spent.On.Site", ylab="Age")
+```
+the under 40s spend more time on site
+```{r}
+plot(diu_plot, age_plot, xlab="Daily.Internet.Usage", ylab="Age")
+```
+
+```{r}
+plot(ai_plot, diu_plot, xlab="Area.Income", ylab="Daily.Internet.Usage")
+```
+```{r}
+plot(dstot_plot, diu_plot, xlab="Daily.Time.Spent.On.Site", ylab="Daily.Internet.Usage")
+```
+there's a bulk of people registering low internet usage and low time spent on site while another one registers these factors highly
+
+# Implementation
+```{r}
+# who clicked the ad
+clicked <- advertising[advertising$Clicked.on.Ad==1,]
+head(clicked)
+```
+
+
+```{r}
+head(advertising)
+```
+# Modelling
+```{r}
+# selecting numerical columns
+df <- advertising[,c(1:4,7,10)]
+head(df)
+```
+
+```{r}
+library(caTools)
+# Splitting data into train
+# and test data
+#df$gender<- as.integer(df$gender)
+#df$clicked_ad<- as.integer(df$clicked_ad)
+set.seed(222)
+ 
+sample_size = round(nrow(df)*.70) # setting what is 70%
+index <- sample(seq_len(nrow(df)), size = sample_size)
+train <- df[index, ]
+test <- df[-index, ]
+# Feature Scaling
+train_scale <- scale(train[, 1:5])
+test_scale <- scale(test[, 1:5])
+```
+
+
+## k-nearest neighbours
+```{r}
+library(class)
+library(caret)
+
+# Fitting KNN to train
+model_knn <- knn(train = train_scale,
+           test = test_scale,
+            cl = train$Clicked.on.Ad,
+            k = 32)
+```
+
+```{r}
+# Confusion Matrix
+conmat <- table(test$Clicked.on.Ad,model_knn)
+confusionMatrix(conmat)
+```
+knn has an accuracy of 0.9491 and a kappa 0.8983
+
+## Challenging the solution
+          
+### Random Forest
+```{r}
+library(randomForest)
+
+# Fitting model to the train dataset
+set.seed(120)  
+model_rf <- randomForest(as.factor(Clicked.on.Ad) ~ ., 
+                        data = train, 
+                        importance = TRUE,
+                        proximity = TRUE)
+
+print(model_rf)
+```
+
+```{r}
+# Predicting the Test set results
+y_pred = predict(model_rf, test)
+
+# Confusion Matrix
+con_mat = table( y_pred,test$Clicked.on.Ad)
+confusionMatrix(con_mat)
+```
+random forest has an equal accuracy of 0.9491 and kappa 0.8982
+
+# Conclusion
+either of the models (KNN and Random Forest) can be used on our dataset as they give almost identical results
+
+# Follow up questions
+1. Did we have the right question?
+yes, predicting who would click on the adverts posted given the different variables was the right question for our dataset
+
+2. did we have the right data?
+Yes, the data provided was relevant to this project
+
+3. Did we need additional data?
+No, the dataset comprised of enough details for the relevant delivarables

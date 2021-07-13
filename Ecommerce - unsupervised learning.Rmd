@@ -1,0 +1,362 @@
+---
+title: "Unsupervised"
+author: "shinyarah"
+date: "7/09/2021"
+output: html_document
+---
+
+## Defining the question
+Kira Plastinina is a Russian brand that has collected data in the last year. Their sales and marketing division is looking into their customers' behaviour and the impact on the company from this data.
+
+## Metrics of success
+Draw relevant insights by performing unsupervised algorithms on the data provided
+
+## Experimental design
+1. import and read the dataset
+2. check for null values
+3. check for duplicates 
+4. univariate analysis
+5. bivariate analysis
+6. Multivaraite analysis
+7. Implementation
+* k-means 
+* hierarchical clusters
+8. Conclusion
+9. Recommendations
+
+## Reading the dataset
+```{r}
+unsupervised <- read.csv("http://bit.ly/EcommerceCustomersDataset")
+unsupervised
+```
+
+```{r}
+#previewing the first entries in our dataset
+head(unsupervised)
+```
+```{r}
+#previweing the last entries
+tail(unsupervised)
+```
+```{r}
+#finding out how many records are in our dataset
+dim(unsupervised)
+```
+```{r}
+#checking the data types
+typeof(unsupervised)
+```
+
+## Tidying the dataset
+```{r}
+#checking for null values
+colSums(is.na(unsupervised))
+```
+```{r}
+#removing null values
+unsupervised <-na.omit(unsupervised)
+```
+
+```{r}
+#checking for duplicates
+anyDuplicated(unsupervised)
+```
+```{r}
+#removing the duplicates
+unsupervised<- unsupervised[!duplicated(unsupervised),]
+```
+```{r}
+#checking for outliers
+#will need to create an only numeric variable
+
+numcols <- unsupervised[ ,1:10]
+dev.new(width=10, height=5, unit="in")
+invisible(lapply(1:ncol(numcols), function(i) boxplot(numcols[[i]],main = paste("Boxplot of" , colnames(numcols[,i])))))
+```
+there were outliers detected. these are reveal the true nature of our dataset so i will be working with them
+
+# Exploratory Data Analysis
+## Univariate analysis
+```{r}
+#summary of numerical values
+summary(numcols)
+```
+```{r}
+#histograms for numerical variables
+invisible(lapply(names(numcols), function(n) hist(numcols[[n]],main = paste("Histogram of" , colnames(numcols[,n])))))
+```
+
+
+```{r}
+#frequency tables for categorical variables
+categorical_cols<- unsupervised[,11:18]
+
+library(epiDisplay)
+
+dev.new(width=10, height=5, unit="in")
+lapply(1:ncol(categorical_cols), function(x) tab1(categorical_cols[,x], sort.group = "decreasing", cum.percent = TRUE,main = colnames(categorical_cols[,x])))
+```
+## Bivariate Analysis
+### Numerical vs numerical
+
+```{r}
+#finding covariance between bounce rates and exit rates
+bounce_r <- (unsupervised$BounceRates)
+exit_r  <- (unsupervised$ExitRates)
+cov(bounce_r, exit_r)
+```
+
+```{r}
+# scatterplot with linear fit line
+library(ggplot2)
+ggplot(unsupervised,
+       aes(x = BounceRates, 
+           y = ExitRates)) +
+  geom_point(color= "red") +
+  geom_smooth(method = "lm")
+```
+increase in bounce rates causes a
+#### Covariance
+```{r}
+#finding covariance between product related and products duration
+p_related <- (unsupervised$ProductRelated)
+p_duration  <- (unsupervised$ProductRelated_Duration)
+cov(p_related, p_duration)
+```
+```{r}
+ggplot(unsupervised,
+       aes(x = ProductRelated, 
+           y = ProductRelated_Duration)) +
+  geom_point(color= "purple") +
+  geom_smooth(method = "lm")
+```
+
+
+```{r}
+#finding covariance between product related and products duration
+admn <- (unsupervised$Administrative)
+admn_dur  <- (unsupervised$Administrative_Duration)
+cov(admn, admn_dur)
+```
+```{r}
+ggplot(unsupervised,
+       aes(x = Administrative, 
+           y = Administrative_Duration)) +
+  geom_point(color= "purple") +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+info <-(unsupervised$Informational)
+info_dur <-(unsupervised$Informational_Duration)
+cov(info, info_dur)
+```
+```{r}
+ggplot(unsupervised,
+       aes(x = Informational, 
+           y = Informational_Duration)) +
+  geom_point(color= "green") +
+  geom_smooth(method = "lm")
+```
+
+### Categorical vs categorical
+```{r}
+
+```
+```{r}
+# stacked bar chart
+ggplot(unsupervised, 
+       aes(x = SpecialDay, 
+           fill = Weekend)) + 
+  geom_bar(position = "stack")
+```
+```{r}
+ggplot(unsupervised, 
+       aes(x = VisitorType, 
+           fill = Weekend)) + 
+  geom_bar(position = "stack")
+```
+### categorical vs numeric
+```{r}
+# calculate mean bouncerates for each month
+library(dplyr)
+plotdata <- unsupervised %>%
+  group_by(Month) %>%
+  summarize(mean_bouncerates = mean(BounceRates))
+
+ggplot(plotdata, 
+       aes(x = Month, 
+           y = mean_bouncerates)) +
+  geom_bar(stat = "identity")
+```
+```{r}
+plotdata <- unsupervised %>%
+  group_by(VisitorType) %>%
+  summarize(mean_exitrates = mean(ExitRates))
+# plot mean salaries
+ggplot(plotdata, 
+       aes(x = VisitorType, 
+           y = mean_exitrates)) +
+  geom_bar(stat = "identity")
+```
+new visitors had the least exit rates while other visitors had hte highest
+
+```{r}
+revenue <- unsupervised[unsupervised$Revenue == 'TRUE',]
+month_freq <- table(revenue$Month)
+sort(month_freq, decreasing = TRUE)[1:5]
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(month_freq), main="revenue per month.",
+        xlab="months",
+        ylab="revenue",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("maroon"))
+```
+november registers the most revenue
+
+```{r}
+visitor_freq <- table(revenue$VisitorType)
+sort(visitor_freq, decreasing = TRUE)[1:5]
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(visitor_freq), main="revenue per visitor type",
+        xlab="VisitorType",
+        ylab="revenue",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("maroon"))
+```
+returning visitors bring in the most revenue. 
+
+```{r}
+region_freq <- table(revenue$Region)
+sort(region_freq, decreasing = TRUE)[1:5]
+options(repr.plot.width = 10, repr.plot.height = 10)
+barplot(c(region_freq), main="Revenue in different regions.",
+        xlab="region",
+        ylab="revenue",
+        cex.main=2, cex.lab=1.7,cex.sub=1.2,
+        col=c("orange"))
+```
+region 1 has most revenue while region 5 has the least
+
+## Multivariate Analysis
+```{r}
+#correlation heatmap
+library(corrplot) 
+correlations<- cor(numcols, method="pearson")
+corrplot(correlations,type="upper",order="hclust",tl.srt=45)
+correlations
+```
+bounce rates and exit rates are highly correlated
+exit rates and administrative have low correlation as well as exit rates and product related
+
+# Solution Implementation
+```{r}
+unsupervised.new <- unsupervised[,1:17]
+head(unsupervised.new)
+```
+
+```{r}
+unsupervised.revenue <- unsupervised$Revenue
+
+unsupervised.new[,12:15] <- sapply(unsupervised.new[,12:15], as.character)
+unsupervised.new[,12:15] <- sapply(unsupervised.new[,12:15], as.numeric)
+head(unsupervised.new)
+```
+```{r}
+#one hot encoding the factor columns
+library(caret)
+dmy = dummyVars(" ~ .", data = unsupervised.new)
+unsup.encod = data.frame(predict(dmy, newdata = unsupervised.new))
+str(unsup.encod)
+dim(unsup.encod)
+```
+
+```{r}
+#normalizing the data
+normalize <- function(x){
+  return ((x-min(x)) / (max(x)-min(x)))
+}
+normalize(unsup.encod)
+```
+## K-means
+```{r}
+#dimensionality reduction
+library(factoextra)
+
+unsup.pca <- prcomp(unsup.encod)
+fviz_eig(unsup.pca)
+summary(unsup.pca)
+unsup.new<- unsup.pca$x
+```
+
+finding the optimum k
+```{r}
+#elbow method
+library(cluster)
+set.seed(123)
+
+
+fviz_nbclust(unsup.new, kmeans, method="wss")
+```
+
+```{r}
+# silhouette method
+fviz_nbclust(unsup.new, kmeans, method="silhouette")
+```
+from both the elbow and silhouette methods, number of k=2
+
+```{r}
+k_mean <- kmeans(unsup.new, centers=2, nstart=25)
+```
+
+```{r}
+k_mean$size
+```
+```{r}
+k_mean$centers
+```
+
+```{r}
+str(k_mean)
+```
+```{r}
+#cluster centres for the attributes
+k_mean$cluster
+```
+### Advantages of k-means
+1. It is easy to implement
+2. convergence is guaranteed with k-means
+3. there is production of more clusters
+
+### Disadvantages of k-means
+1. initial seeds carry great impact on final result
+2. does not work well with clusters of different sizes and densities
+3. difficult to predict the k-value
+
+## Hierarchical Clustering
+```{r}
+#computing distance
+d <- dist(unsup.encod, method = "euclidean")
+
+# computing hierarchical clusters using ward 
+res.hc <- hclust(d, method = "ward.D2" )
+res.hc
+
+# Plotting the dedrogram
+plot(res.hc, cex = 0.6, hang = -1)
+```
+```{r}
+res.hc1 <- hclust(d, method = "complete")
+
+# Plotting 
+plot(res.hc1, cex = 0.6, hang = -1)
+```
+# Conclusion
+1. Returning visitors register the highest number, hence the most revenue
+2. weekdays register the highest traffic
+3. May and November had the most frequency while February had the least
+
+# Recommendations
+1. Improve on ad spectrum in order to reduce the gap between revenue per region and months
+2. Since most revenue is gotten from returning visitors, find a way to make new and other visitors come back to the site. 
+
